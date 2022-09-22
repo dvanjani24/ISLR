@@ -391,9 +391,9 @@ parametric or non-parametric.</p>
 <li>Second, select procedure to fit the data using the model, i.e. least
 squares.</li>
 <li>Disadvantage of parametric is that it often might truly match the
-form of f. But, can make the model more complex, however, complex models
-can lead to over-fitting, which is the phenomenon where the models too
-closely follow the error.</li>
+form of f. Although it abides by strict assumptions of a functional
+form, it may not accurately predict the true form.<br />
+</li>
 </ul></li>
 <li>Non-parametric Methods
 <ul>
@@ -404,7 +404,8 @@ over-fitting - more smoothing, less over-fitting.</li>
 </ul></li>
 </ul></li>
 <li><p>There tends to be a trade-off between flexibility and
-interpretability.</p></li>
+interpretability. Ties into bias-variance trade-off. The more flexible,
+the less biased, the more variant, and the less interpretable.</p></li>
 <li><p>Supervised vs. Unsupervised learning</p>
 <ul>
 <li>Supervised: where we are aiming to predict a known response Y with a
@@ -435,10 +436,13 @@ estimate test MSE using training data.</p></li>
 <ul>
 <li>Variance: the amount by which the function f changes when applied on
 different training sets. Generally, more flexible functions (less
-smooth) have higher variance, because of overfitting.</li>
+smooth) have higher variance, because of overfitting. Models that pay
+very close attention to the training dataset, but don’t generalize, tend
+to have high variance.</li>
 <li>Bias: the error between prediction vs. actual correct value, caused
 by underfitting and not paying attention to the features. More flexible
-methods have lower bias.</li>
+methods have lower bias. Models that pay little attention to the
+training dataset and generalize too much will have high bias.</li>
 <li>Relative change of variance and bias impacts how much the test MSE
 increases/decreases.</li>
 </ul></li>
