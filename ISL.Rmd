@@ -1,0 +1,456 @@
+---
+title: "Introduction to Statistical Learning"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Dependencies for this course:
+```{r}
+packages = c("ISLR2","MASS", "ggplot2",
+             "car", "caret", "pROC",
+             "e1071", "boot", "caTools",
+             "leaps")
+pacman::p_load(char = packages)
+```
+
+## 2. Statistical Learning
+
+### Intro
+
+* Reducible vs irreducible error: Reducible error is error that we can reduce by optimizing the correct regression/classification method. Irreducible error is the error associated with our error term in in a function - this by definition cannot be reduced as the error cannot be predicted (it is unrelated to X).
+
+* Most statistical learning methods can be characterized as parametric or non-parametric. 
+  + Parametric: 
+    - First, we assume the form of f. Say it's linear model.
+    - Second, select procedure to fit the data using the model, i.e. least squares. 
+    - Disadvantage of parametric is that it often might truly match the form of f. Although it abides by strict assumptions of a functional form, it may not accurately predict the true form.  
+  + Non-parametric Methods
+    - Avoids the need to abide by a functional form f, so allows for flexibility. However, can lead to over-fitting and requires a lot of data points. Smoothness is the parameter that can control the over-fitting - more smoothing, less over-fitting. 
+    
+* There tends to be a trade-off between flexibility and interpretability. Ties into bias-variance trade-off. The more flexible, the less biased, the more variant, and the less interpretable. 
+
+* Supervised vs. Unsupervised learning
+  + Supervised: where we are aiming to predict a known response Y with a set of features X. Examples: Linear regression, decision trees, logistic regressions, support vector machines.
+  + Unsupervised: where we lack a response variable but are aiming to gain patterns from the data to see if there is anything insightful. Common method is clustering - to see if observations tend to fall in a certain group.
+
+* In deciding between classification (e.g., logistic) vs regression (e.g., simple linear), the response variable configuration matters (e.g., qualitative or quantitative). The predictors are less important, as long as you code appropriately. 
+
+### Assessing model accuracy
+
+* For regressions, MSE is the most popular. 
+
+* Models that are less-smooth may minimize training MSE really well (over-fit), but won't perform well in terms of test MSE. Therefore applying the right level of smoothing is critical. Generally, more smooth, better test MSE. However, linear (which is the smoothest) can be a little too restrictive at times. Cross-validation is a great method to estimate test MSE using training data. 
+
+* Bias-Variance Trade-off
+  + Variance: the amount by which the function f changes when applied on different training sets. Generally, more flexible functions (less smooth) have higher variance, because of overfitting. Models that pay very close attention to the training dataset, but don't generalize, tend to have high variance.
+  + Bias: the error between prediction vs. actual correct value, caused by underfitting and not paying attention to the features. More flexible methods have lower bias. Models that pay little attention to the training dataset and generalize too much will have high bias. 
+  + Relative change of variance and bias impacts how much the test MSE increases/decreases.
+  
+* For classifications, error rate is the most popular. Proportion of mistakes that are made if we apply estimate f to the training observations.
+  + Bayes classifier assigns a probability of a classification (i.e., say Y = 1 or 0) given X, and classifies data based on the probability. It is practically impossible to calculate the bayes classifier, as we do not know the conditional distribution of Y given X. All we can do is estimate - see K-Nearest Neighbor. 
+  + Bayes classifier produced the lowest possible test error rate, called the Bayes error rate, as it maximized probability of each situation when classifying. 
+
+* K-Nearest Neighbor
+  + Aims to estimate the Bayes classifier
+  + Based on a value of K, it finds the K nearest points to the predictor (Xi) and assigns a probability of each classification (e.g, 1 or 0) of Y based on the observed sample K.
+  + The lower the K, the more overfitting, the lower the bias, the higher the variance. 
+  + Training error can effectively be 0 if you make K = 1, but testing error is what matters. 
+  + Testing error will initially decline as K increases, as the bias decreases. But, will increase again due to high variance if K is too high. 
+  + Goal is to find the optimal K. 
+  
+## 3. Linear Regression
+
+### Multiple Linear Regression
+
+* Hypothesis test requires checking if Beta = 0 or not, if at least one Beta is not 0, we can reject. 
+
+* F-Statistic is used. If F greater than 1, good evidence that model works (i.e. null reject)
+
+* F-Statistic vs. P-value. As predictors increase, P-value can result in false positive. Say you have p = 100 predictors, there's a chance 5 predictors show a relationship (0.05 significance level). F-statistic adjusts for this. 
+
+* For large number of predictors, use other methods like forward selection backward selection. 
+
+* First step of multivariate regression: calculate F-statistic and p-value. If p-value is significant, then we know at least one variable is significant. But, are there any culprits?
+
+* Variable selection: compare models using model quality assesments like: Akaike Information Criterion (AIC), Bayesian Information Criterion (BIC), and adj R2. 
+
+* If number of predictors is too high, it's impossible to compare all combinations of a model. So the methods to consider are:
+  + Forward Selection: Start from the null model and move up. Keep going until we reach a stopping rule. 
+  + Backward Selection: Start with the full model and come down. Keep going until we reach a stopping rule (e.g., all remaining variables have p-value < X)
+  + Mixed Selection: Mix of the above.
+  + Pros and cons:
+    - Backward selection cannot be used if p > n, forward selection can be greedy and  and might include variables earlier that may become redundant. Mix selection can remedy this.
+    
+* R^2: variance in Y explained by X. More predictors, higher R^2 because residual sum of error will always go down. But of course, not a reason to have higher number of predictors. 
+
+* Confidence interval vs. prediction interval
+  + Confidence interval: 95% of the true value is contained in interval. It accounts for irreducible error. 
+  + Prediction interval: accounts for both reducible and irreducible error, hence always wider than CI. 
+
+* For qualitative predictors, use dummy codes, the B0 (intercept) is the 0 code. 
+
+## Other Considerations of Regression Models
+
+* Often, the additive and linearity assumptions are violated in practice. Additive meaning that variables are not interacting and linearity meaning constant variance in errors across X. Ways to deal:
+  + Additive: include interaction term. 
+  
+* Potential problems of linear regressions:
+  + Non-linearity between response and predictor
+    - Check residual vs fitted plots to see if there is any non-linear relationships
+    - Potentially transform predictor
+  + Correlation of error terms
+    - Plot residuals over time to see if there is tracking error - mostly found in time series regressions
+  + Non-constant variance of error terms (heteroscedasticity)
+    - Standard errors, confidence intervals, hypothesis tests rely on this assumption. 
+    - Potentially transform response (like log or square root)
+  + Outliers
+    - Calculate studenterized residuals, computed by dividing each residual ei by its estimated standard error. If Abs value greater than 3, then remove. 
+  + High-leverage points
+    - Particular feature/predictor value is an outlier.
+    - Calculate leverage statistic
+  + Collinearity 
+    - Decline in t-statistic, due to increase of standard error in the beta
+    - Power of experiment is decreased
+    - Calculate Variance inflation factor VIF (lowest possible score is 1) for each predictor, if greater than 5 or 10, there's multicollinearity 
+    
+The marketing plan:
+
+```{r}
+ad_data = read.csv("Advertising.csv")
+ad_data = ad_data[-1]
+regressor = lm(Sales ~., data = ad_data)
+summary = summary(regressor) 
+summary$coefficients[,1] + (1.96*summary$coefficients[,2]) #CI of TV and Radio are narrow, newspaper contains 0
+vif(regressor) #no collinearity, VIFs are low
+which.max(hatvalues(regressor)) #leverage statistics
+summary$r.squared
+#plot(regressor)
+```
+
+* K-nearest neighbors regression (KNN regressor)
+   - Optimal value of k depends on bias-variance tradeoff. Small k allows for most flexibility, but risks overfitting and high variance. 
+   - KNN tends to underperform linear regression when you have a high amount of predictors, as the nearest "k" for a certain predictor may be very far away. 
+   - General rule: parametric approaches outperform non-parameteric approaches when there is a smaller set of predictors per observation
+
+## Classification
+
+Working with Default dataset.
+```{r}
+head(Default)
+ggplot(Default) +
+  geom_point(aes(x = balance, y = income, col = default))
+
+ggplot(Default) +
+  geom_boxplot(aes(x = default, y = balance))
+ggplot(Default) +
+  geom_boxplot(aes(x = default, y = income))
+```
+* Why you don't want to use a linear regression:
+  + in cases with greater than 2 categories, there is ordering and magnitude that is assumed that does not make sense
+  + when there are 2 categories, the regression will not show meaningful probabilities
+  
+### Logistic Regression
+
+* Best to use when the response is binary (i.e., 2 categories)
+
+* Logistic regressions model the probability that Y belongs to a particular category
+
+* Use maximum likelihood to fit logistic regressions
+
+* S-shaped curve
+
+* Maximum likelihood used to estimate the betas of the model such that the predicted probabilities are as close to the observed value. 
+
+```{r}
+def = Default
+def$default = factor(def$default, levels = c('No','Yes'), labels = c(0,1))
+classifer = glm(default ~ balance, data = def, family = binomial)
+summary(classifer)
+```
+
+* Beta for balance is 0.0055. Positive correlation meaning increase in balance is related to increase in probability of default, specifically, one unit increase in balance results is associated with an increase in the log odds of default by 0.0055. 
+
+* Predict probability of default for different balance values
+```{r}
+predict(classifer, data.frame(balance = c(1000,2000,3000)), type = 'response')
+```
+
+* Predicting using categorical variables. Probability of default for student is 0.04 and for non-studnet it is 0.03.
+```{r}
+def$student = factor(Default$student, levels = c("Yes", "No"), labels = c(1,0))
+classifer = glm(default ~ student, data = def, family = binomial)
+summary(classifer)
+predict(classifer, data.frame(student = factor(c(0,1))), type = 'response')
+```
+
+* Multivariate logistic regression - interestingly student with same balance/income will end up having a lower probability of default. This is the power of confounding, as balance and student must be correlated. 
+```{r}
+classifier = glm(default ~ ., data = def, family = binomial)
+summary(classifier)
+predict(classifier, data.frame(student = factor(c(1)), balance = 1500, income = 40000), type = 'response')
+```
+
+*Multinomial logistic regressions - when response has more than just 2 classes is also possible. Use a baseline or softmax coding.
+
+### Generative Models for Classifications
+
+* Alternative to logistic regression. In logistic regression, we are modeling the conditional distribution of response Y given predictor X. In Generative Models, we model the distribution of the predictors X separately for each response. If distribution of X within each class is normal, both model methods are similar. 
+
+* Confusion matrix compares predictions to observed for classification models
+  + Sensitivity: percentage of true defaulters correctly identified - Yes / Total
+  + Specificity: Percentage of non-defaulters correctly identified - No / Total
+
+* Bayes classifier minimizes total error rate of all classifiers, using a 50% threshold by default. If we are more concerned about one class over the other, say those that default to be correctly predicted, we can decrease the posterior threshold to say 20%. A credit card company may favor this approach as predicting non-defaulters as defaulter (although not ideal) may be worth the marginal benefit of predicting defaulters accurately.
+
+```{r}
+classifier <- lda(default ~. , data = def)
+y_pred = predict(classifier, def[-1], type = 'response')
+cm = confusionMatrix(y_pred$class, def$default)
+roc = roc(def$default, y_pred$x, plot = TRUE)
+```
+
+* ROC / AUC: 
+  + ROC: Receiver operating characteristics. Displays the True positive vs. false positive rate. Optimal is if it curves on the left hand upper side. 
+  + AUC area under the ROC curve. 
+
+* Definitions:
+  + False Positive Rate: Type 1 error, 1-Specificity 
+  + True Positive Rate: 1-Type 2 error, power, sensitivity, recall
+  + Positive Predicted value: Precision, 1-flse discovery proportion
+  
+* Linear vs. Quadratic Discriminatory Analysis - way of estimating bayes classifier based on distribution of predictor. LDA is better in smaller datasets as it reduces possibility of variance, while QDA is preferred for larger datasets as it reduces the 
+potentially high variance from a very flexible estimate. 
+
+* Naive Bayes Classifier operates on one main assumption: Within each class, the p predictors are independent. This is a drastic simplification which actually tends to perform well when n is relatively small related to p. Introduces bias but does well in variance. 
+
+```{r}
+classifier <- qda(default ~. , data = def)
+y_pred = predict(classifier, def[-1], type = 'response')
+cm = confusionMatrix(y_pred$class, def$default)
+
+classifier <- naiveBayes(default ~. , data = def)
+y_pred = predict(classifier, def[-1])
+cm = confusionMatrix(y_pred, def$default)
+```
+
+* Naive Bayes vs. LDA vs. QDA vs. Logistic vs. KNN:
+  + LDA is a special restricted case of QDA, where covariance matrices across predictors are the same
+  
+  + LDA is a special case of Naive Bayes where the bayes decision boundary is linear. LDA assumes features are normally distributed with common within-class covariance matrix, and naive bayes instead assumes independence of features. 
+  
+  + Naive can be more flexible, QDA is better when intereractions among the predictors are important
+  
+  + Logistic and LDA have the same linear form. In LDA, the coefficience in the linear functions are obtained by assuming predictors follow a normal distribution, by contrast, logistic regression, the coefficients are chosen to maximize likelihood function. LDA outperfoms logistic regression if predictors are normal, logistic otuperforms otherwise. 
+  
+  + KNN is non-parametric, and so will dominate other methods when the decision boundary is highly non-linear, provided n is very large and p is small
+  
+  + KNN performs a lot better when n is large, p is small. Need more data.
+  
+  + QDA would be better when n is modest and p is not very small, because it can provide a non-linear decision boundary while taking advantage of a parametric form. 
+  
+  + KNN doesn't tell us which predictors are most important, unlike logistic regression. 
+  
+* True decision boundary is: 
+  + Linear: LDA and logistic regression
+  + Non-linear: QDA or naive bayes
+  + Extremely non-linear: KNN (choose correct K using CV)
+
+### Generalized Linear Models
+
+We model bikeshare dataset using a linear regression.
+```{r}
+bike_data = Bikeshare
+bike_data <- bike_data[,c("bikers", "mnth", "workingday", "hr", "temp", "weathersit")]
+
+lm.regression = lm(bikers ~ ., data = bike_data)
+lm.summary = summary(lm.regression)
+lm.plot = plot(lm.regression) #Terrible
+
+lm2.regression = lm(log(bikers) ~., data = bike_data)
+lm2.summary = summary(lm2.regression)
+lm2.plot = plot(lm2.regression) #Better - but still not great
+```
+  
+```{r}
+poisson.regression = glm(bikers ~., data = bike_data, family = poisson)
+poisson.summary = summary(poisson.regression)
+```
+
+* Poisson Regression
+  + Y takes on non-negative integer values
+  + Poisson is usually used to model counts, because counts take on non-negative integer values
+  + Maximum likelihood function (same as logistic) used to estimate betas
+  + Interpretation: 1 unit increase in X results in a exp(beta) increase in E(Y) = lambda
+    - weathersitcloudy/misty: -0.075231 => exp(-0.08) = 0.923, so on average 92.3% as many people are expected to use bikes compared to when its clear. 
+  + Mean-variance relationship: poisson mean and variance are equal, while linear regression assumes a constant variance. 
+  + Nonnegative fitted values: Poisson handles this
+  
+
+* GLM in greater generality: linear, logistic, and poisson
+  + Each approach uses predictors, where Y belongs to a certain family of distributions.
+    - Linear: Y follows gaussian/normal distribution
+    - Logistic: Y follows bernoulli/binomial distribuition
+    - Poisson: Y follows poisson distribution
+  + Each approach models the mean of Y as a function of predictors using link function based on the distribution, Gaussian/Bernoulli/Poisson, as well as gamma, exponential, negative binomial distribution are all a part of exponential distribution. 
+
+## Resampling Methods
+
+* Repeatedly drawing samples from a training set and refitting a model of interest on each sample
+
+### Cross-Validation (CV)
+
+* Validation Set approach - split training / testing sample
+
+* Leave-One Out Cross-Validation - train on n-1, and predict one value n times. Average out the MSEs.
+  + Less bias
+  + Less random
+  + If n is large, computationally consuming
+    - For linear / polynomial regression, magic formula to help with this.
+    
+* k-Fold Cross-Validation - divide observation into k groups of approximately equal size, first fold is trained and fitted on the remaining k-1 folds. The procedure is repeated k times, MSE is averaged. Usually k = 5 or 10
+
+* k-Fold often preferred as LOOCV is unbiased / highly variant. 
+
+* Same concept for classification models, except for instead of MSE, use number of misclassified observations of Y
+
+### Bootstrap
+
+* Useful in quantifying the uncertainty associated with a given estimator or statistical learning method. 
+
+* Bootstrap by resampling with replacement Z dataset B times, compute estimator B times, and then calculate standard error
+
+```{r}
+set.seed(10)
+glm.fit <- glm(mpg ~ horsepower, data = Auto)
+(cv.err <- cv.glm(Auto, glm.fit)$delta[1]) #Default is LOOCV
+(cv.err <- cv.glm(Auto, glm.fit, K = 10)$delta[1]) #K-fold CV
+```
+
+```{r}
+boot.fn <- function(data, index){glm(mpg~horsepower, data = data, subset = index)$coefficient}
+boot(Auto, boot.fn ,1000)
+```
+
+## Linear Model Selection & Regularization
+
+* If p > n, can't use ordinary least squares linear regression, as variance will be infinite (overfitting). Shrinking or constraining the coefficients can improve this dilemna. 
+
+* Three potential alternative fitting methods:
+  + Subset selection: Identify subset p of predictors that are most relevant, and use OLS to fit
+  + Shrinkage: Fit all predictors and apply shrinkage (or regularization) to the coefficient relative to the OLS estimates, reducing variance.
+  + Dimension reduction: Project p predictors into an M-dimensional subspace, where M < p. Compute M different linear combinations / projects of the variables, then M projections are used as predictors to fit a OLS regression
+  
+### Subset Selection
+
+* Best Subset Selection:
+  + First, fit null model, which is just the mean of the response
+  + Second, fit P models with K predictors where K = 1 - P, select best model using RSS / R^2
+  + Third, select single best model out of the P+1 models from steps 1 and 2 using CV, AIC, BIC, or adjusted R^2
+  + Note: this is computationally exhaustive and as predictors grow, training error comes down, so need to use variance-adjusted methods. 
+  
+* Forward Stepwise Selection - better computationally:
+  + First, fit null model, with no predictors
+  + Second, fit all p - k models that augment the predictors in Mk with one additional predictor
+  + Third, choose the best among the p-k models and call it Mk+1, using RSS and R^2
+  + Last, out of all M0...Mp models, select best using CV, AIC, BIC, or adjusted R^2
+  + Example: Stock price (Y) predicted by 5 variables X1...X5
+    - M0 = Y ~ Beta0
+    - Fit Y~X1, ..., Y~X5, best is X2, so M1 = Y~X2
+    - Fit Y~X2 + X1, ..., Y~X2 + X5, X4 is the best, so M2 = Y~X2 + X4 
+    - Select between M0...MP
+
+*Backward Stepwise Selection - same as Forward, just start from full model and remove variables
+  + Cannot be used when P > n, as full model needs to be fit. Forward Stepwise can be used in this case. 
+  
+* Hybrid approach: combine forward and backward. 
+
+* Two ways of choosing optimal model out of models with different number of predictors: 
+  + Directly estimate the test error, using either a validation set approach or cross-validation approach
+  + Indirectly estimate test error by adjusting training error for a bias
+  
+* Cp - penalizes training RSS (hence MSE as MSE = RSS / n) for greater number of variables
+* AIC Critetrion - similar to Cp
+* BIC - similar to above, but places larger penalty on higher number of predictors
+* Normal R^2 = 1 - RSS/TSS, since RSS always decreases the more variables there are, the R^2 will always increase. Adjusted-R^2 penalizes additional "noise variables", similar to the above, and adjusts for this. 
+
+* Alternatively, directly estimate test MSE using cross-validation. 
+  + Advantages: directly estimates test MSE, and does not make as many assumptions about the true underlying model
+
+* One-standard-error rule: First calculate the standard error of the estimated test MSE for each model size, and then select the smallest model for which the estimate test error is within one standard error of the lowest point on the curve. Idea here is to go with the simplest model if models are fairly equal
+
+```{r}
+df = Credit
+df$South = ifelse(df$Region == "South", 1, 0)
+df$West = ifelse(df$Region == "West", 1, 0)
+df$Region <- NULL
+df$South <- factor(df$South)
+df$West <- factor(df$West)
+full = glm(Balance ~., data = df)
+
+# Using Step Function in MASS
+forward = stepAIC(glm(Balance~1, data = df), scope = list(upper = full, lower = ~1), direction = "forward")
+backward = stepAIC(full, direction = "backward")
+both = stepAIC(full, direction = "both")
+
+# Using regsubsets to see all models in leaps 
+forward.models = regsubsets(Balance~., data = df, nvmax = 11, method = "forward")
+backward.models = regsubsets(Balance~., data = df, nvmax = 11, method = "backward")
+both.models = regsubsets(Balance~., data = df, nvmax = 11, method = "seqrep")
+model_selection_summary <- function(object){
+  object <- summary(object)
+  object.df <- data.frame(object$which)
+  object.df$cp <- object$cp
+  object.df$bic <-object$bic
+  object.df$adjr2 <-object$adjr2
+  
+  print(object.df)
+  
+  print(ggplot(object.df) +
+  geom_line(aes(x = 1:nrow(object.df), y = cp), col = "blue") + 
+  geom_point(aes(x = 1:nrow(object.df), y = cp), col = "red") +
+  xlab("Predictors"))
+  
+  print(ggplot(object.df) +
+  geom_line(aes(x = 1:nrow(object.df), y = bic), col = "blue") + 
+  geom_point(aes(x = 1:nrow(object.df), y = bic), col = "red") +
+  xlab("Predictors"))
+  
+  print(ggplot(object.df) +
+  geom_line(aes(x = 1:nrow(object.df), y = adjr2), col = "blue") + 
+  geom_point(aes(x = 1:nrow(object.df), y = adjr2), col = "red") +
+  xlab("Predictors"))
+  
+}
+model_selection_summary(forward.models)
+#model_selection_summary(backward.models)
+#model_selection_summary(both.models)
+
+# Using CV through train function in caret
+train.control <- trainControl(method = "cv", number = 10)
+model <- train(Balance~., data = df, method = "lmStepAIC",
+               trControl = train.control, trace = FALSE)
+summary(model)
+```
+
+### Shrinkage Methods
+
+* Shrinkage allows to reduce variance by regularizing coefficient estimates. Best known techniques: ridge regression and lasso. 
+
+* Ridge Regression - all coefficients are reduced proportionally:
+  + Same as OLS where we are minimizing RSS, but we are also adding a shrinkage penalty term, having the impact of shrinking the estimates towards zero. There is a tuning parameter lamda that is critical here. As lambda -> 0, we have the same OLS, as it -> infinity, the betas get closer to zero. 
+  + Enhances OLS model in terms of bias-variance trade-off. Works best when OLS has high variance, perhaps in situations where p is very large, and so overfitting (low bias) is occuring.
+  + One key disadvantage: includes all predictors 
+
+* The Lasso - starting point of the coefficient matters:
+  + Same as ridge regression, however its penalty is in the form of l1 norm rather than l2 norm. Also, it has the ability to force the beta to 0 if lambda is sufficiently large, i.e. it can remove variables. 
+  + Ridge proportionally reduces all beta's, lasso reduces all coefficients by a similar amount and sufficiently small coefficients are shrunken all the way to zero. 
+
+
+
+    
+
+    
